@@ -80,7 +80,6 @@ private class HeaderUpdater(
     private val animator = ValueAnimator()
 
     override fun update() {
-      throw Exception("Here?");
         val missingDates = viewState.dateRange.filterNot { labelLayouts.hasKey(it.toEpochDays()) }
         for (date in missingDates) {
             val key = date.toEpochDays()
