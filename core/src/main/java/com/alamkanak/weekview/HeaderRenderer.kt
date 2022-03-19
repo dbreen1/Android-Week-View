@@ -80,10 +80,11 @@ private class HeaderUpdater(
     private val animator = ValueAnimator()
 
     override fun update() {
-        // val missingDates = viewState.dateRange.filterNot { labelLayouts.hasKey(it.toEpochDays()) }
-        for (date in viewState.dateRange) {
-          val key = date.toEpochDays()
-          labelLayouts.put(key, calculateStaticLayoutForDate(date))
+      throw Exception("Here?");
+        val missingDates = viewState.dateRange.filterNot { labelLayouts.hasKey(it.toEpochDays()) }
+        for (date in missingDates) {
+            val key = date.toEpochDays()
+            labelLayouts.put(key, calculateStaticLayoutForDate(date))
         }
 
         val dateLabels = viewState.dateRange.map { labelLayouts[it.toEpochDays()] }
@@ -139,20 +140,43 @@ private class DateLabelsDrawer(
 ) : Drawer {
 
     override fun draw(canvas: Canvas) {
-        canvas.drawInBounds(viewState.headerBounds) {
+        if (viewState.numberOfVisibleDays > 1) {
+            canvas.drawDateLabelInMultiDayView()
+        } else {
+            canvas.drawDateLabelInSingleDayView()
+        }
+    }
+
+    private fun Canvas.drawDateLabelInSingleDayView() {
+        val bounds = viewState.weekNumberBounds
+        val date = viewState.dateRange.first()
+
+        val key = date.toEpochDays()
+        val textLayout = dateLabelLayouts[key]
+
+        withTranslation(
+            x = bounds.centerX(),
+            y = viewState.headerPadding,
+        ) {
+            draw(textLayout)
+        }
+    }
+
+    private fun Canvas.drawDateLabelInMultiDayView() {
+        drawInBounds(viewState.headerBounds) {
             viewState.dateRangeWithStartPixels.forEach { (date, startPixel) ->
                 drawLabel(date, startPixel)
             }
         }
     }
 
-    private fun Canvas.drawLabel(day: Calendar, startPixel: Float) {
-        val key = day.toEpochDays()
+    private fun Canvas.drawLabel(date: Calendar, startPixel: Float) {
+        val key = date.toEpochDays()
         val textLayout = dateLabelLayouts[key]
 
         withTranslation(
             x = startPixel + viewState.dayWidth / 2f,
-            y = viewState.headerPadding
+            y = viewState.headerPadding,
         ) {
             draw(textLayout)
         }
@@ -198,7 +222,7 @@ private class AllDayEventsUpdater(
             eventChips.forEachIndexed { index, eventChip ->
                 eventChip.updateBounds(index = index, startPixel = modifiedStartPixel)
                 if (eventChip.bounds.isNotEmpty) {
-                    eventsLabelLayouts[eventChip] = textFitter.fit(eventChip)
+                    eventsLabelLayouts[eventChip] = textFitter.fitAllDayEvent(eventChip)
                 } else {
                     eventsLabelLayouts.remove(eventChip)
                 }
@@ -340,8 +364,12 @@ private class HeaderDrawer(
 
         canvas.drawRect(0f, 0f, width, viewState.headerHeight, backgroundPaint)
 
-        if (viewState.showWeekNumber) {
+        if (viewState.showWeekNumber && viewState.numberOfVisibleDays > 1) {
             canvas.drawWeekNumber()
+        }
+
+        if (viewState.showTimeColumnSeparator) {
+            canvas.drawTimeColumnSeparatorExtension()
         }
 
         if (viewState.showAllDayEventsToggleArrow) {
@@ -380,6 +408,19 @@ private class HeaderDrawer(
         drawRoundRect(backgroundRect, radius, radius, backgroundPaint)
 
         drawText(weekNumber, bounds.centerX(), bounds.centerY() + textOffset, textPaint)
+    }
+
+    private fun Canvas.drawTimeColumnSeparatorExtension() {
+        val startX = if (viewState.isLtr) {
+            viewState.timeColumnWidth - viewState.timeColumnSeparatorPaint.strokeWidth / 2
+        } else {
+            viewState.viewWidth - viewState.timeColumnWidth
+        }
+
+        val startY = viewState.headerPadding
+        val stopY = viewState.headerHeight
+
+        drawLine(startX, startY, startX, stopY, viewState.timeColumnSeparatorPaint)
     }
 
     private fun Canvas.drawAllDayEventsToggleArrow() = with(viewState) {
