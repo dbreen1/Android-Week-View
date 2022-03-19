@@ -139,6 +139,8 @@ internal val Calendar.isToday: Boolean
 
 internal fun Calendar.toEpochDays(): Int = (atStartOfDay.timeInMillis / DAY_IN_MILLIS).toInt()
 
+internal fun Calendar.toIntKey(): Int = ( this.get(Calendar.YEAR) + this.get(Calendar.MONTH) + this.get(Calendar.DAY_OF_MONTH)  ) 
+
 internal val Calendar.lengthOfMonth: Int
     get() = getActualMaximum(Calendar.DAY_OF_MONTH)
 
