@@ -85,7 +85,7 @@ private class HeaderUpdater(
             labelLayouts.put(key, calculateStaticLayoutForDate(date))
         }
 
-        val dateLabels = viewState.dateRange.map { labelLayouts.get(it.toEpochDays()) ?: null }
+        val dateLabels = viewState.dateRange.map { labelLayouts.get(it.toEpochDays())!! }
         updateHeaderHeight(dateLabels)
     }
 
@@ -148,7 +148,7 @@ private class DateLabelsDrawer(
         val date = viewState.dateRange.first()
 
         val key = date.toEpochDays()
-        val textLayout = dateLabelLayouts.get(key) ?: null
+        val textLayout = dateLabelLayouts.get(key)!!
 
         withTranslation(
             x = bounds.centerX(),
@@ -168,7 +168,7 @@ private class DateLabelsDrawer(
 
     private fun Canvas.drawLabel(date: Calendar, startPixel: Float) {
         val key = date.toEpochDays()
-        val textLayout = dateLabelLayouts.get(key) ?: null
+        val textLayout = dateLabelLayouts.get(key)!!
 
         withTranslation(
             x = startPixel + viewState.dayWidth / 2f,
