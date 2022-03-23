@@ -137,7 +137,7 @@ internal val Calendar.isBeforeToday: Boolean
 internal val Calendar.isToday: Boolean
     get() = isSameDate(today())
 
-internal fun Calendar.toEpochDays(): String = (this.get(Calendar.YEAR) + "-" + this.get(Calendar.MONTH) + "-" + this.get(Calendar.DAY_OF_MONTH))
+internal fun Calendar.toEpochDays(): String = (this.get(Calendar.YEAR).toString() + "-" + this.get(Calendar.MONTH).toString() + "-" + this.get(Calendar.DAY_OF_MONTH).toString() )
 
 internal fun Calendar.toIntKey(): Int = (this.get(Calendar.YEAR) + this.get(Calendar.MONTH) + this.get(Calendar.DAY_OF_MONTH)) 
 
