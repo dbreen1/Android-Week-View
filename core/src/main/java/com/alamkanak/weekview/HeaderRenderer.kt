@@ -8,7 +8,6 @@ import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.text.StaticLayout
 import android.text.TextPaint
-import android.util.SparseArray
 import androidx.collection.ArrayMap
 import androidx.core.content.ContextCompat
 import java.util.Calendar
@@ -22,7 +21,7 @@ internal class HeaderRenderer(
 ) : Renderer, DateFormatterDependent {
 
     private val allDayEventLabels = ArrayMap<EventChip, StaticLayout>()
-    private val dateLabelLayouts = SparseArray<StaticLayout>()
+    private val dateLabelLayouts = HashMap<String, StaticLayout>()
 
     private val headerUpdater = HeaderUpdater(
         viewState = viewState,
@@ -73,20 +72,20 @@ internal class HeaderRenderer(
 
 private class HeaderUpdater(
     private val viewState: ViewState,
-    private val labelLayouts: SparseArray<StaticLayout>,
+    private val labelLayouts: HashMap<String, StaticLayout>,
     private val onHeaderHeightChanged: () -> Unit
 ) : Updater {
 
     private val animator = ValueAnimator()
 
     override fun update() {
-        val missingDates = viewState.dateRange.filterNot { labelLayouts.hasKey(it.toEpochDays()) }
+        val missingDates = viewState.dateRange.filterNot { labelLayouts.containsKey(it.toEpochDays()) }
         for (date in missingDates) {
             val key = date.toEpochDays()
             labelLayouts.put(key, calculateStaticLayoutForDate(date))
         }
 
-        val dateLabels = viewState.dateRange.map { labelLayouts[it.toEpochDays()] }
+        val dateLabels = viewState.dateRange.map { labelLayouts.get(it.toEpochDays()) }
         updateHeaderHeight(dateLabels)
     }
 
@@ -129,13 +128,11 @@ private class HeaderUpdater(
         }
         return dayLabel.toTextLayout(textPaint = textPaint, width = viewState.dayWidth.toInt())
     }
-
-    private fun <E> SparseArray<E>.hasKey(key: Int): Boolean = indexOfKey(key) >= 0
 }
 
 private class DateLabelsDrawer(
     private val viewState: ViewState,
-    private val dateLabelLayouts: SparseArray<StaticLayout>
+    private val dateLabelLayouts: HashMap<String, StaticLayout>
 ) : Drawer {
 
     override fun draw(canvas: Canvas) {
@@ -151,7 +148,7 @@ private class DateLabelsDrawer(
         val date = viewState.dateRange.first()
 
         val key = date.toEpochDays()
-        val textLayout = dateLabelLayouts[key]
+        val textLayout = dateLabelLayouts.get(key)
 
         withTranslation(
             x = bounds.centerX(),
@@ -171,7 +168,7 @@ private class DateLabelsDrawer(
 
     private fun Canvas.drawLabel(date: Calendar, startPixel: Float) {
         val key = date.toEpochDays()
-        val textLayout = dateLabelLayouts[key]
+        val textLayout = dateLabelLayouts.get(key)
 
         withTranslation(
             x = startPixel + viewState.dayWidth / 2f,
